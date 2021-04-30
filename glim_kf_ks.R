@@ -131,7 +131,8 @@ eta <- rowSums(X*beta)
 p <- exp(eta)
 y <- rpois(n, p)
 
-b0 <- solve(t(X[1:2, ]), rep(log(mean(y[1:100])), 2))
+# b0 <- solve(t(X[1:2, ]), rep(log(mean(y[1:5])), 2))
+b0 <- c(1, 1)
 G <- diag(1, 2)
 Sig0 <- diag(1, 2)*1e-1
 W <- diag(1, 2)*1e-3
@@ -155,20 +156,21 @@ res_CF <- dglm_conBayes(y, X, b0, Sig0, G, W,
 res_CS <- dglm_conBayes(y, X, b0, Sig0, G, W,
                         smoother = T, model = 'poisson')
 
-######## deviance
-deviance <- function(res){
-  etaPred <- rowSums(X*res$b)
-  pPred <- 1/ (1 + exp(-etaPred))
-  return(2*sum(ifelse(y == 0, 0, y*log(y/pPred)) - (y - pPred)))
+######## MSE
+MSE <- function(res, beta){
+  return(mean(rowSums((res$b - beta)^2)))
 }
 
-deviance(res_LF)
-deviance(res_LS)
-deviance(res_CF)
-deviance(res_CS)
+MSE(res_LF, beta)
+MSE(res_LS, beta)
+MSE(res_CF, beta)
+MSE(res_CS, beta)
+
 
 ######## plot
 #### Laplace approximation
+png('D:\\GitHub\\stat5735-final-project\\LP1.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 1], type = 'l', lwd = 3,
      ylim = c(min(beta[, 1])-.6, max(beta[, 1])+.3),
      xlab = 't', ylab = 'first state vector')
@@ -180,7 +182,10 @@ lines(res_LS$b[, 1] + res_LF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_LS$b[, 1] - res_LF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 legend('topleft', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
+dev.off()
 
+png('D:\\GitHub\\stat5735-final-project\\LP2.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 2], type = 'l', lwd = 3,
      ylim = c(min(beta[, 2])-.3, max(beta[, 2])+.3),
      xlab = 't', ylab = 'second state vector')
@@ -190,10 +195,13 @@ lines(res_LF$b[, 2] - res_LF$Sig[2, 2, ], col = 'red', lty = 2, lwd = 3)
 lines(res_LS$b[, 2], col = 'blue', lwd = 3)
 lines(res_LS$b[, 2] + res_LF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_LS$b[, 2] - res_LF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
-legend('topleft', legend = c('true', 'filtering', 'smoothing'),
+legend('topright', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
+dev.off()
 
 #### conjugate prior
+png('D:\\GitHub\\stat5735-final-project\\CP1.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 1], type = 'l', lwd = 3,
      ylim = c(min(beta[, 1])-.6, max(beta[, 1])+.3),
      xlab = 't', ylab = 'first state vector')
@@ -205,7 +213,10 @@ lines(res_CS$b[, 1] + res_CF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_CS$b[, 1] - res_CF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 legend('topleft', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
+dev.off()
 
+png('D:\\GitHub\\stat5735-final-project\\CP2.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 2], type = 'l', lwd = 3,
      ylim = c(min(beta[, 2])-.3, max(beta[, 2])+.3),
      xlab = 't', ylab = 'second state vector')
@@ -215,9 +226,9 @@ lines(res_CF$b[, 2] - res_CF$Sig[2, 2, ], col = 'red', lty = 2, lwd = 3)
 lines(res_CS$b[, 2], col = 'blue', lwd = 3)
 lines(res_CS$b[, 2] + res_CF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_CS$b[, 2] - res_CF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
-legend('topleft', legend = c('true', 'filtering', 'smoothing'),
+legend('topright', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
-
+dev.off()
 
 #############################################
 ############ Binomial Example ###############
@@ -236,7 +247,7 @@ eta <- rowSums(X*beta)
 p <- 1/ (1 + exp(-eta))
 y <- rbinom(n, 1, p)
 
-b0 <- beta[1, ]
+b0 <- c(1, 1)
 G <- diag(1, 2)
 Sig0 <- diag(1, 2)*1e-1
 W <- diag(1, 2)*1e-3
@@ -251,12 +262,14 @@ res_LS <- dglm_laplace(y, X, b0, Sig0, G, W,
                        smoother = T, model = 'binomial')
 
 
-######## deviance
-deviance(res_LF)
-deviance(res_LS)
+######## MSE
+MSE(res_LF, beta)
+MSE(res_LS, beta)
 
 
 ######## plot
+png('D:\\GitHub\\stat5735-final-project\\LB1.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 1], type = 'l', lwd = 3,
      ylim = c(min(beta[, 1])-.3, max(beta[, 1])+.3),
      xlab = 't', ylab = 'first state vector')
@@ -268,7 +281,10 @@ lines(res_LS$b[, 1] + res_LF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_LS$b[, 1] - res_LF$Sig[1, 1, ], col = 'blue', lty = 2, lwd = 3)
 legend('topleft', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
+dev.off()
 
+png('D:\\GitHub\\stat5735-final-project\\LB2.png',
+    width = 600,height = 400, res = 100)
 plot(beta[, 2], type = 'l', lwd = 3,
      ylim = c(min(beta[, 2])-.3, max(beta[, 2])+.3),
      xlab = 't', ylab = 'second state vector')
@@ -278,9 +294,9 @@ lines(res_LF$b[, 2] - res_LF$Sig[2, 2, ], col = 'red', lty = 2, lwd = 3)
 lines(res_LS$b[, 2], col = 'blue', lwd = 3)
 lines(res_LS$b[, 2] + res_LF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
 lines(res_LS$b[, 2] - res_LF$Sig[2, 2, ], col = 'blue', lty = 2, lwd = 3)
-legend('topleft', legend = c('true', 'filtering', 'smoothing'),
+legend('topright', legend = c('true', 'filtering', 'smoothing'),
        lwd = 3, col = c('black', 'red', 'blue'))
-
+dev.off()
 #############################################
 
 
